@@ -1,0 +1,99 @@
+*{
+    background-color:black; 
+}
+
+
+grid{
+    background-color: grey;
+}
+
+label{
+    color:white;
+    background-color: black;
+}
+
+/*label#label1{
+    border-top:2px solid white;
+}*/
+
+/*****************VUE PARTIE****************/
+
+label#label1, label#label3, label#label5, label#label7, label#label8{
+    border-right:2px solid white;
+}
+
+label#label1, label#label2, label#label3, label#label5, label#label6{
+    border-bottom:2px solid white;
+}
+
+label#label1, label#label2, label#label7, label#label8, label#label9{
+    font-size: 25px;
+}
+
+label#label3, label#label4, label#label5, label#label6{
+    font-size:30px;
+    font-weight: bold;
+}
+
+/*****************VUE CANAL****************/
+label#canallabel7, label#canallabel8{
+    border-right:2px solid white;
+}
+
+label#canallabel1, label#canallabel2{
+    border-bottom:2px solid white;
+}
+
+label#canallabel1, label#canallabel7, label#canallabel8, label#canallabel9{
+    font-size: 25px;
+    font-weight: bold;    
+}
+
+label#canallabel2{
+    font-size:50px;
+    font-weight: bold;
+}
+
+/*****************VUE RAZ ET DEMANDE SI MEME CANAL****************/
+label#razlabel7, label#razlabel8{
+    border-right:2px solid white;
+}
+
+label#razlabel1{
+    border-bottom:2px solid white;
+}
+
+label#razlabel7, label#razlabel8, label#razlabel9{
+    font-size: 25px;
+    font-weight: bold;    
+}
+
+label#razlabel1{
+    font-size:35px;
+    font-weight: bold;
+}
+
+/*****************VUE LISTE****************/
+
+label#listelabel2, label#listelabel7, label#listelabel8{
+    border-right:2px solid white;
+}
+
+label#listelabel1, label#listelabel2, label#listelabel3{
+    border-bottom:2px solid white;
+}
+
+label#listelabel1, label#listelabel7, label#listelabel8, label#listelabel9{
+    font-size: 25px;
+    font-weight: bold;    
+}
+
+label#listelabel2, label#listelabel3{
+    font-size:25px;
+    font-weight: bold;
+}
+
+label#labelErrorCo{
+    font-size:25px;
+    font-weight: bold;
+}

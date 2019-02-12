@@ -1,0 +1,26 @@
+﻿-Faire une partie complète avec les joueurs 1, 2 et 3
+
+-Tester l'ordre de tir avec le changement de tireur
+
+-Mettre un score pour chaque tireur
+
+-Interrompre une partie en cours et vérifier que celle-ci peut être reprise
+
+-Vérifier que seuls les tireurs 1, 2, 3 et 5 peuvent se connecter plusieurs fois
+
+-Essayer de connecter un tireur n'ayant plus de crédit
+
+-Vérifier qu'un tireur ayant un seul crédit ne peux lancer de partie si il est connecté plusieurs fois
+
+-Passer en mode évènement et vérifier le blocage des comptes normaux
+
+-Changer le mode de décompte
+
+-Utiliser les codes admins '1996' pour reset la partie et '2000' pour consulter le nombre
+    de plateaux lancés par la télécommande
+
+-Vérifier qu'une partie ne peut être lancée sans connexion
+
+-Passer en mode nombre de plateaux par canal
+
+-Essayer de connecter plus de 10 tireurs

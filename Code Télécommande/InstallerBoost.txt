@@ -1,0 +1,11 @@
+Installer Boost et Boost.Serialization :
+
+-R�cup�rer boost_1_66_0.7z avec SourceTree
+-Extraire le zip
+-Se placer dans le dossier
+-Faire "sudo ./bootstrap.sh --prefix=/usr/"
+-Attendre
+-Faire "sudo ./b2"
+-Attendre longtemps
+-Faire "sudo ./b2 install"
+-Attendre encore longtemps
