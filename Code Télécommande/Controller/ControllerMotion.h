@@ -27,7 +27,8 @@ private:
     std::vector<Channel*> channelList;
     std::string pwd;
     unsigned int channelPointer;
-    int platType, nbPlatMax, paramDefaultNbPlat, platSent;
+    int platType, nbPlatMax, paramDefaultNbPlat, platSent,nbCreditsCurrentPlayer;
+    float delaiRafale;
     bool isParamRefreshed;
     bool isSave;
 
@@ -39,6 +40,7 @@ public:
     //accesseurs
     void setViewMotion(ViewMotion*);
     int getPlatType();
+    float getDelaiRafale();
     std::string getPlatSent();
 
 
@@ -57,6 +59,9 @@ public:
     
     //Permet de naviguer à la main entre les différents canaux lors du choix
     void changeCanalNumber(int);
+
+    //Permet de choisir manuellement le nombre de credits que l'on souhaite utiliser pendant la partie
+    void changeNbCredits(int);
     
     /* 
     *  Permet d'ajouter un tireur à la liste
@@ -80,11 +85,8 @@ public:
     //Scanne un code QR d'utilisateur
     int scanQRCode();
 
-    //Permet de choisir un parcours/canal
-    int addParcours();
-
-    //Scanne un code QR de parcours
-    int scanParcours();
+    //Permet de changer à la main le delai entre chaque tir (dans le mode rafale)
+    void changeDelay(int);
 
     //Permet d'incrémenter ou de décrémenter le score des tireurs
     void changeScore(int);
@@ -142,6 +144,9 @@ public:
     //Permet de remettre à zéro le nombre de plateaux lancés par la télécommande
     void resetPlat();
 
+    void add_cksum(uint8_t[], int);
+    void add_addr16(uint8_t[], int, int);
+    int base16ToBase10(int);
     
 };
 

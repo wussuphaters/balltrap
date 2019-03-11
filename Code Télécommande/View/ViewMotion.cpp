@@ -70,11 +70,11 @@ void ViewMotion::setNoView(int no){
 * 7 : Administration
 **/
 bool ViewMotion::on_key_release_event(GdkEventKey* event){
-    if (event->keyval == 34){
+    if (event->keyval == 65451){
         is_a_pressed = FALSE;
     }
 
-    if (event->keyval == 98){
+    if (event->keyval == 65288){
         is_b_pressed = FALSE;
     }
 
@@ -106,13 +106,13 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
         switch(viewNo){
             case 1:
                 switch(event->keyval){
-                    case 38:                
+                    case 38:             
                     case 65455:
                         this->controller->addUser();
                         break;
                     case 233:
                     case 65450:
-                        this->controller->deleteUser();                
+                        this->controller->deleteUser();
                         break;
                     case 34:
                     case 65453:
@@ -128,24 +128,19 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
             case 2:
                 switch(event->keyval){
                     case 38:
-                    /*case 65455:
+                    case 65455:
                         this->controller->changeCanalNumber(0);
-                        break;*/
+                        break;
                     case 233:
                     case 65450:
-                        //this->controller->changeCanalNumber(1);
-                        int test=this->controller->addParcours();
-                        if(test!=-1)    {
-                            this->viewNo = 3;
-                            this->controller->startGame(1);
-                        }   
+                        this->controller->changeCanalNumber(1);
                         break;
-                    /*case 34:
+                    /*case 34:*/
                     case 65453:
                         cout << "vue2";
                         this->viewNo = 3;
                         this->controller->startGame(1);
-                        break;*/
+                        break;
                 }
                 break;
             case 3:
@@ -161,9 +156,9 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         cout << "vue3";
                         this->controller->changePlayer();
                         break;
-                    default:
+                    /*default:
                         this->controller->shoot(event->keyval);
-                        break;
+                        break;*/
                 }
                 break;
             case 4:
@@ -241,9 +236,105 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;
                 }
                 break;
+            case 9:
+                switch(event->keyval){
+                    case 65455:
+                        this->controller->changeDelay(0);
+                        break;
+                    case 65450:
+                        this->controller->changeDelay(1);
+                        break;
+                    case 65453:
+                        this->viewNo=3;
+                        this->controller->redirectAfterMessage();              
+                        break;
+                }
+                break;
+            /*case 10:
+                switch(event->keyval){
+                    case 65455:
+                        this->controller->changeNbCredits(0);
+                        break;
+                    case 65450:
+                        this->controller->changeNbCredits(1);
+                        break;
+                    case 65453:
+                        this->viewNo=1;
+                        this->controller->addUser();
+                        //this->controller->redirectAfterMessage();              
+                        break;
+                }
+                break;*/
         }
     }
     return true;
+}
+
+bool ViewMotion::on_key_press (GdkEventKey *e)
+{
+    if(this->viewNo==3) {
+        switch(e->keyval){
+                    case 65455:
+                    break;
+                    case 65450:
+                    break;
+                    case 65453:
+                    break;
+                    default:
+                        this->controller->shoot(e->keyval);
+                        sleep(this->controller->getDelaiRafale());
+                        break;
+                }
+    }
+    if(this->viewNo==1) {
+        if (e->keyval == 65451 && is_a_pressed == FALSE){
+            is_a_pressed = TRUE;
+        }
+
+        if (e->keyval == 65288 && is_b_pressed == FALSE)
+            is_b_pressed = TRUE;
+
+        if (e->keyval == 65421 && is_c_pressed == FALSE)
+            is_c_pressed = TRUE;
+
+        if (is_a_pressed && is_b_pressed){
+            currentView = this->getNoView();
+            this->controller->resetPwd();
+            this->setNoView(7);
+            this->controller->redirectAfterMessage();
+            choice = 1;
+            is_a_pressed = FALSE;
+            is_b_pressed = FALSE;
+        }
+
+        if (is_c_pressed && is_b_pressed){
+            this->controller->resetPwd();
+            currentView = this->getNoView();
+            this->setNoView(7);
+            choice = 2;
+            this->controller->redirectAfterMessage();
+            is_c_pressed = FALSE;
+            is_d_pressed = FALSE;
+        }        
+    }
+
+    if(this->viewNo==3) {
+        if (e->keyval == 65451 && is_a_pressed == FALSE){
+            is_a_pressed = TRUE;
+        }
+        if (e->keyval == 65288 && is_b_pressed == FALSE)
+            is_b_pressed = TRUE;
+        if (is_a_pressed && is_b_pressed){
+            currentView = this->getNoView();
+            this->setNoView(9);
+            this->controller->redirectAfterMessage();
+            is_a_pressed = FALSE;
+            is_b_pressed = FALSE;
+        }
+    }
+
+  /* let the event propagate further */
+  return GDK_EVENT_PROPAGATE;
 }
 
 void ViewMotion::showGame(Game * game){
@@ -326,7 +417,7 @@ void ViewMotion::showGame(Game * game){
 }
 
 void ViewMotion::showChannelChoose(const char* canalNumber){
-    /*MainWindow->remove();        
+    MainWindow->remove();        
     resetGrid();
     label1.set_label("Choisissez votre canal");
     label2.set_label(canalNumber);
@@ -357,14 +448,18 @@ void ViewMotion::showChannelChoose(const char* canalNumber){
     grid.attach(label9, 2, 5, 1, 1);
 
     MainWindow->add(grid); 
-    MainWindow->show_all(); */
+    MainWindow->show_all();    
+}
+
+void ViewMotion::showNbCreditsChoose(const char* nbCredits){
     MainWindow->remove();        
     resetGrid();
-    label1.set_label("Scannez votre parcours");
-    label8.set_label("OK");
-    label2.set_label(" ");
-    label7.set_label(" ");
-    label9.set_label(" ");
+    label1.set_label("Combien de crédits souhaitez-vous utiliser ?");
+    label2.set_label(nbCredits);
+    label7.set_label("-");
+    label8.set_label("+");
+    label9.set_label("Valider");
+
     label1.set_name("canallabel1");
     label2.set_name("canallabel2");
     label7.set_name("canallabel7");
@@ -379,6 +474,7 @@ void ViewMotion::showChannelChoose(const char* canalNumber){
     grid.insert_row(0);
     grid.insert_row(0);
     grid.insert_row(0);
+    grid.insert_row(0);
 
     grid.attach(label1, 0, 0, 3, 1);
     grid.attach(label2, 0, 1, 3, 4);
@@ -387,8 +483,42 @@ void ViewMotion::showChannelChoose(const char* canalNumber){
     grid.attach(label9, 2, 5, 1, 1);
 
     MainWindow->add(grid); 
-    MainWindow->show_all();
+    MainWindow->show_all();    
+}
+
+void ViewMotion::showDelayChoose(const char* delay){
+    MainWindow->remove();        
+    resetGrid();
+    label1.set_label("Délai entre tirs en rafale");
+    label2.set_label(delay);
+    label7.set_label("-");
+    label8.set_label("+");
+    label9.set_label("Valider");
+
+    label1.set_name("canallabel1");
+    label2.set_name("canallabel2");
+    label7.set_name("canallabel7");
+    label8.set_name("canallabel8");
+    label9.set_name("canallabel9");
     
+    grid.insert_column(0);
+    grid.insert_column(0);
+    grid.insert_column(0);
+
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+
+    grid.attach(label1, 0, 0, 3, 1);
+    grid.attach(label2, 0, 1, 3, 4);
+    grid.attach(label7, 0, 5, 1, 1);
+    grid.attach(label8, 1, 5, 1, 1);
+    grid.attach(label9, 2, 5, 1, 1);
+
+    MainWindow->add(grid); 
+    MainWindow->show_all();    
 }
 
 void ViewMotion::showPlayerList(std::vector<UserInfo*>* userList){
@@ -797,49 +927,4 @@ void ViewMotion::showPlatChoose(){
     MainWindow->add(grid); 
     MainWindow->show_all(); 
 
-}
-
-bool ViewMotion::on_key_press (GdkEventKey *e)
-{
-  /* acquire key A */
-    if (e->keyval == 34 && is_a_pressed == FALSE){
-        is_a_pressed = TRUE;
-    }
-
-  /* acquire key B */
-    if (e->keyval == 98 && is_b_pressed == FALSE)
-        is_b_pressed = TRUE;
-
-  /* both keys have been pressed */
-    if (is_a_pressed && is_b_pressed){
-        currentView = this->getNoView();
-        this->controller->resetPwd();
-        this->setNoView(7);
-        this->controller->redirectAfterMessage();
-        choice = 1;
-        is_a_pressed = FALSE;
-        is_b_pressed = FALSE;
-    }
-
-    if (e->keyval == 38 && is_d_pressed == FALSE){
-        is_d_pressed = TRUE;
-    }
-
-  /* acquire key B */
-    if (e->keyval == 99 && is_c_pressed == FALSE)
-        is_c_pressed = TRUE;
-
-  /* both keys have been pressed */
-    if (is_c_pressed && is_d_pressed){
-        this->controller->resetPwd();
-        currentView = this->getNoView();
-        this->setNoView(7);
-        choice = 2;
-        this->controller->redirectAfterMessage();
-        is_c_pressed = FALSE;
-        is_d_pressed = FALSE;
-  }
-
-  /* let the event propagate further */
-  return GDK_EVENT_PROPAGATE;
 }

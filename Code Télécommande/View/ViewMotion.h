@@ -45,6 +45,12 @@ public:
     //Affichage de la vue du choix de canal
     void showChannelChoose(const char*);
 
+    //Affichage de la vue de changement de delai entre chaque rafale
+    void showDelayChoose(const char*);
+
+    //Affichage de la vue de choix de nombre de credits a utiliser pour la partie
+    void showNbCreditsChoose(const char*);
+
     //Affichage de la vue permettant de choisir ou non de lancer la sauvegarde
     void showSaveChoose();
 

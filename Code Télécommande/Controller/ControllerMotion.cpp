@@ -10,16 +10,22 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <errno.h>
+#include <stdint.h>
 
 using namespace std;
 
 ControllerMotion::ControllerMotion(){
-    this->database = new Database("http://192.168.43.240/balltrap/public/api/command/");
+    this->database = new Database("http://192.168.0.108/balltrap/public/api/command/");
     this->game = new Game();
     this->channelPointer=0;
     this->isParamRefreshed=false;
     this->isSave = false;
     this->pwd = "";
+    this->delaiRafale=4;
+    this->nbCreditsCurrentPlayer=1;
 }
 
 void ControllerMotion::setViewMotion(ViewMotion* view){
@@ -76,6 +82,11 @@ void ControllerMotion::redirectAfterMessage(){
         case 8:
             this->view->showPlatChoose();
             break;
+        case 9:{
+        	std::ostringstream ss;
+			ss << delaiRafale;
+        	this->view->showDelayChoose(ss.str().c_str());
+        	break;}
         default:
             break;
     }
@@ -85,10 +96,16 @@ int ControllerMotion::getPlatType(){
     return this->platType;
 }
 
-/**** Fonction pour Vue 1 ( canal ) ****/
+void ControllerMotion::changeDelay(int moreOrLess)	{
+		if(moreOrLess==0 && this->delaiRafale>4.1) this->delaiRafale=this->delaiRafale-0.1;
+		else if(moreOrLess==1) this->delaiRafale=this->delaiRafale+0.1;
+		std::ostringstream ss;
+		ss << delaiRafale;
+	    this->view->showDelayChoose(ss.str().c_str());
+}
 
-void ControllerMotion::changeCanalNumber(int idParcours){
-    /*if(moreOrLess==0){
+void ControllerMotion::changeCanalNumber(int moreOrLess){
+    if(moreOrLess==0){
         if(this->channelPointer>0){
             this->channelPointer--;
         }
@@ -100,14 +117,17 @@ void ControllerMotion::changeCanalNumber(int idParcours){
     }
     this->game->setGameChannel(*(this->channelList.at(this->channelPointer)));    
     this->view->showChannelChoose(this->game->getGameChannel()->getChannelNumber().c_str());
-    */
-    this->channelPointer=idParcours-1;
-    this->game->setGameChannel(*(this->channelList.at(this->channelPointer)));    
-    this->view->showChannelChoose(this->game->getGameChannel()->getChannelNumber().c_str());
 }
 
-/**** Fonction pour Vue 2 ( Liste ) ****/
-
+void ControllerMotion::changeNbCredits(int moreOrLess)	{
+	if(moreOrLess==0)	{
+		if(this->nbCreditsCurrentPlayer>1) this->nbCreditsCurrentPlayer--;
+	}
+	else if(moreOrLess==1) this->nbCreditsCurrentPlayer++;
+	std::ostringstream ss;
+	ss << this->nbCreditsCurrentPlayer;
+	this->view->showNbCreditsChoose(ss.str().c_str());
+}
 
 void ControllerMotion::addUser(){
     if(this->game->getGameUsers()->size()<10){
@@ -118,32 +138,10 @@ void ControllerMotion::addUser(){
                     this->refreshParams();
                 }
                 int nbCred = this->database->howManyCredit(id,1);
-                switch(nbCred){
-                    case 0 : {
-                        this->view->showMessage("Vous n'avez plus de crédit disponibles\nImpossible de rejoindre la partie !");
-                        break;
-                    }
-                    case 1 : {
-                        this->view->showMessage("Il ne vous reste qu'un seul crédit !");
-                        this->connectUser(to_string(id).c_str());
-                        break;
-                    }
-                    case 2 : {
-                        this->view->showMessage("Il ne vous reste que deux crédits !");
-                        this->connectUser(to_string(id).c_str());
-                        break;
-                    }
-                    case 3 : {
-                        this->view->showMessage("Il ne vous reste que trois crédits !");
-                        this->connectUser(to_string(id).c_str());
-                        break;
-                    }
-                    case -1 : {
-                        this->view->showMessage("Impossible de récupérer le nombre de crédits !");
-                        break;
-                    }
-                    default : this->connectUser(to_string(id).c_str()); break;
-                }
+                if(nbCred==0) this->view->showMessage("Vous n'avez plus de crédits\nImpossible de rejoindre la partie !");
+                else if(nbCred==-1) this->view->showMessage("Impossible de récupérer le nombre de crédits !");
+                else if(nbCred<nbCreditsCurrentPlayer) this->view->showMessage("Vous n'avez plus assez de crédits\nImpossible de rejoindre la partie !");
+                else this->connectUser(to_string(id).c_str());
             }
             else{
                 this->view->showMessage("Aucune connexion internet\nVeuillez vous approcher d'un\nrépéteur wi-fi et recommencer");               
@@ -182,7 +180,6 @@ void ControllerMotion::startGame(int type){
             if(this->database->isConnectedToNetwork()){
                 this->refreshParams();
                 vector<UserInfo*> list;
-                //0 : compak / 1 : parcours / 2 : fosse
                 list = this->database->checkCredit(this->game->getGameUsers(), type);
                 if(list.size() > 0){
                     this->view->showMessage("Certains joueurs n'ont plus de crédit");
@@ -201,7 +198,6 @@ void ControllerMotion::startGame(int type){
                         this->view->showMessage("Problème de paramètrage\nveuillez contacter un administrateur !\nErr : plateaux");
                         return;
                     }
-                    //if(!this->isSave){
                     this->game->setGameAllPlat(maxp * this->game->getGameUsers()->size());
                     if(this->platType == 0){                                  
                         for(unsigned int i = 0; i < this->game->getGameUsers()->size(); i++){
@@ -215,7 +211,6 @@ void ControllerMotion::startGame(int type){
                         this->game->getGameUsers()->at(i)->setScore(0);
                     }
                     this->game->setGameCurrentUser(this->game->getGameUsers()->at(0));
-                    // this->saveGame();
                     this->view->setNoView(3);
                     this->redirectAfterMessage();
                 }
@@ -224,7 +219,8 @@ void ControllerMotion::startGame(int type){
                 }
             }
             else{
-                this->view->showMessage("Aucune connexion internet\nVeuillez vous approcher d'un\nrépéteur wi-fi et recommencer");            
+                this->view->showMessage("Aucune connexion internet\nVeuillez vous approcher d'un\nrépéteur wi-fi et recommencer");
+                this->view->setNoView(2);       
             }
     }
     else{
@@ -285,68 +281,6 @@ int ControllerMotion::scanQRCode(){
     fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
     fichierUtilisateurEcriture << "0";
     fichierUtilisateurEcriture.close();
-
-    return id;
-}
-
-int ControllerMotion::addParcours()	{
-	int id=this->scanParcours();
-    if(id!=-1)  {
-    	this->changeCanalNumber(id);
-    	return 0;
-    }
-    return -1;
-}
-
-int ControllerMotion::scanParcours(){
-    int id=-1,i=0,tempsAttenteMax=10,curseur=17;
-    string idStr="";
-    ifstream fichierUtilisateurLecture;
-    ofstream fichierUtilisateurEcriture;
-    const char* cheminFichier="/home/pi/dirlist.txt";
-    pid_t pid = fork();
-
-    if(pid == 0 )   { //enfant
-        int fd;
-        if((fd = open(cheminFichier, O_RDWR | O_CREAT, 0666))==-1){
-            perror("open");
-            return -1;
-        }
-
-        dup2(fd,STDOUT_FILENO);
-        dup2(fd,STDERR_FILENO);
-        close(fd);
-        execlp("zbarcam","zbarcam","--prescale=100x100"/*,"--nodisplay"*/,NULL);
-        sleep(2);
-        exit(0);
-    }
-    if(pid > 1 )    { //parent
-        string chaine= "0";
-        while(chaine=="0")    {
-            fichierUtilisateurLecture.open(cheminFichier);
-            std::cout << i+1 << '\n';
-            getline(fichierUtilisateurLecture,chaine);
-            i++;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            if(i==tempsAttenteMax)   {
-                std::cout << "timeout" << '\n';
-                fichierUtilisateurLecture.close();
-                kill(pid, SIGKILL);
-                return -1;
-            }
-            fichierUtilisateurLecture.close();
-        }
-        kill(pid, SIGKILL);
-        while(chaine.at(curseur) != '$')	{
-        	idStr+=chaine.at(curseur);
-        	curseur++;
-        }
-        id=atoi(idStr.c_str());
-        std::cout << "ID du parcours scanné : " << id << "\n";
-        fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
-        fichierUtilisateurEcriture << "0";
-        fichierUtilisateurEcriture.close();
-    }
 
     return id;
 }
@@ -456,8 +390,6 @@ bool ControllerMotion::connectUser(const char* id){
     return false;
 }
 
-/**** Vue 3 ****/
-
 void ControllerMotion::changeScore(int moreOrLess){
     if(moreOrLess){
         this->game->getGameCurrentUser()->setScore(this->game->getGameCurrentUser()->getScore()+1);        
@@ -558,27 +490,57 @@ void ControllerMotion::shoot(int keyval){
     }
 }
 
-/**
-*   keyval : 97 : A / 98 : B .... 104 : H
-*   channel : numéro du channel de 1 à 32
-*/
-void ControllerMotion::sendWave(int numLanceur, int numCanal){
-	char dest_addr_16[8];
-	if(numLanceur<10){
-		sprintf(dest_addr_16, "%d0%d", numCanal, numLanceur);
-	}else{
-		sprintf(dest_addr_16, "%d%d", numCanal, numLanceur);
+void ControllerMotion::sendWave(int numLanceur16, int numCanal16){
+	int fd;
+	int numCanal10=base16ToBase10(numCanal16);
+	int numLanceur10=base16ToBase10(numLanceur16);
+ 	fd = open("/dev/ttyUSB0", O_WRONLY | O_NOCTTY | O_NDELAY );	
+
+	struct termios SerialPortSettings;	
+    tcgetattr(fd, &SerialPortSettings);
+	cfsetospeed(&SerialPortSettings,B9600); 
+	tcsetattr(fd,TCSANOW,&SerialPortSettings);
+
+	/*Construction de la trame d'activation du relais*/
+	uint8_t on[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
+	for(int i = 5; i<11; ++i){
+		on[i] = 0x00;
 	}
-	pid_t pid = fork();
-	if(pid==0)	{
-		execl("/usr/bin/java", "/usr/bin/java","-Djava.library.path=/usr/lib/jni", "-cp", ".:/usr/share/java/RXTXcomm.jar",  "-jar", "/home/pi/xbee.jar", dest_addr_16, NULL);
+	for (int i = 11; i<13; ++i){
+		on[i] = 0xFF;
 	}
+	add_addr16(on, numCanal10, numLanceur10);
+	on[15] = 0x02;
+	on[16] = 0x44; 
+	on[17] = 0x31;
+	on[18] = 0x05;
+	add_cksum(on, sizeof(on));
+
+	/*Construction de la trame de désactivation du relais*/
+	uint8_t off[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
+	for(int i = 5; i<11; ++i){
+		off[i] = 0x00;
+	}
+	for (int i = 11; i<13; ++i){
+		off[i] = 0xFF;
+	}
+	add_addr16(off, 255, 254);
+	off[15] = 0x02;
+	off[16] = 0x44; 
+	off[17] = 0x31;
+	off[18] = 0x04;
+	add_cksum(off, sizeof(off));
+
+	write(fd,on,sizeof(on));
+	close(fd);
+
+
+	int fd2 = open("/dev/ttyUSB0",O_WRONLY | O_NOCTTY | O_NDELAY);
+	sleep(0.1);
+	write(fd2, off, sizeof(off));
+	cout<<"Delai de "<<delaiRafale<<"secondes";
+	close(fd2);
 }
-
-/**** Vue 4 ****/
-
-
-/**** Vue 5 ****/
 
 void ControllerMotion::restartGame(){
     this->game->clearUserList();
@@ -599,6 +561,10 @@ void ControllerMotion::checkBackup(){
         this->view->setNoView(6);
         this->redirectAfterMessage();
     }
+}
+
+float ControllerMotion::getDelaiRafale()	{
+	return this->delaiRafale;
 }
 
 void ControllerMotion::readBackup(int keyValue){   
@@ -653,23 +619,39 @@ void ControllerMotion::confirmPwd(int choice){
 }
 
 void ControllerMotion::pushLetter(int key){
+	cout<<"je suis dans pushletter";
+	cout << this->pwd;
     switch(key){
-        case 97:
-            this->pwd += 'A'; break;
-        case 98:
-            this->pwd += 'B'; break;
-        case 99:
-            this->pwd += 'C'; break;
-        case 100:
-            this->pwd += 'D'; break;
-        case 101:
-            this->pwd += 'E'; break;
-        case 102:
-            this->pwd += 'F'; break;
-        case 103:
-            this->pwd += 'G'; break;
-        case 104:
-            this->pwd += 'H'; break;
+        case 65457:
+			this->pwd+='1';
+			break;
+		case 65458:
+			this->pwd+='2';
+			break;
+		case 65459:
+			this->pwd+='3';
+			break;
+		case 65460:
+			this->pwd+='4';
+			break;
+		case 65461:
+			this->pwd+='5';
+			break;
+		case 65462:
+			this->pwd+='6';
+			break;
+		case 65463:
+			this->pwd+='7';
+			break;
+		case 65464:
+			this->pwd+='8';
+			break;
+		case 65465:
+			this->pwd+='9';
+			break;
+		case 65466:
+			this->pwd+='0';
+			break;
     }
 }
 
@@ -703,7 +685,6 @@ bool ControllerMotion::readAllPlat(){
   }
   else{
     this->platSent = 0;      
-    //this->view->showMessage("Fichier de décompte introuvable\n veuillez contacter un administrateur");
     return false;
   }
 }
@@ -728,5 +709,30 @@ string ControllerMotion::getPlatSent(){
     char const* pchar = temp_str.c_str();
     std::string s = pchar;
     return pchar;
+}
+
+void ControllerMotion::add_cksum(uint8_t p[], int pktsize){
+	  uint8_t cksum = 0;  // start with a zero checksum
+	  for (int i = 3; i < pktsize-1; i++) {  // skip the Start and len, start with byte 4.
+	    // (remembering that C arrays start at 0, not 1.)
+	    cksum += p[i];    // Add in this byte.
+	  }  // next byte
+	  cksum &= 0xFF;        // low order 8 bits
+	  cksum = 0xFF - cksum; // subtract from 0xFF
+	  p[19] = cksum;
+}
+
+void ControllerMotion::add_addr16(uint8_t p[], int channel, int remote){
+	uint8_t ch = (uint8_t) channel;
+	uint8_t re = (uint8_t) remote;
+	p[13] = ch;
+	p[14] = re;
+}
+
+int ControllerMotion::base16ToBase10(int hex)	{
+	int dizaine = hex / 10;
+	int unite = hex%10;
+	int ret = dizaine*16 + unite;
+	return ret;
 }
 
