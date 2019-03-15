@@ -18,7 +18,7 @@
 using namespace std;
 
 ControllerMotion::ControllerMotion(){
-    this->database = new Database("http://192.168.0.108/balltrap/public/api/command/");
+    this->database = new Database("http://192.168.0.109/balltrap/public/api/command/");
     this->game = new Game();
     this->channelPointer=0;
     this->isParamRefreshed=false;
@@ -83,10 +83,10 @@ void ControllerMotion::redirectAfterMessage(){
             this->view->showPlatChoose();
             break;
         case 9:{
-        	std::ostringstream ss;
-			ss << delaiRafale;
-        	this->view->showDelayChoose(ss.str().c_str());
-        	break;}
+            std::ostringstream ss;
+            ss << delaiRafale;
+            this->view->showDelayChoose(ss.str().c_str());
+            break;}
         default:
             break;
     }
@@ -96,12 +96,12 @@ int ControllerMotion::getPlatType(){
     return this->platType;
 }
 
-void ControllerMotion::changeDelay(int moreOrLess)	{
-		if(moreOrLess==0 && this->delaiRafale>4.1) this->delaiRafale=this->delaiRafale-0.1;
-		else if(moreOrLess==1) this->delaiRafale=this->delaiRafale+0.1;
-		std::ostringstream ss;
-		ss << delaiRafale;
-	    this->view->showDelayChoose(ss.str().c_str());
+void ControllerMotion::changeDelay(int moreOrLess)  {
+        if(moreOrLess==0 && this->delaiRafale>4.1) this->delaiRafale=this->delaiRafale-0.1;
+        else if(moreOrLess==1) this->delaiRafale=this->delaiRafale+0.1;
+        std::ostringstream ss;
+        ss << delaiRafale;
+        this->view->showDelayChoose(ss.str().c_str());
 }
 
 void ControllerMotion::changeCanalNumber(int moreOrLess){
@@ -119,14 +119,14 @@ void ControllerMotion::changeCanalNumber(int moreOrLess){
     this->view->showChannelChoose(this->game->getGameChannel()->getChannelNumber().c_str());
 }
 
-void ControllerMotion::changeNbCredits(int moreOrLess)	{
-	if(moreOrLess==0)	{
-		if(this->nbCreditsCurrentPlayer>1) this->nbCreditsCurrentPlayer--;
-	}
-	else if(moreOrLess==1) this->nbCreditsCurrentPlayer++;
-	std::ostringstream ss;
-	ss << this->nbCreditsCurrentPlayer;
-	this->view->showNbCreditsChoose(ss.str().c_str());
+void ControllerMotion::changeNbCredits(int moreOrLess)  {
+    if(moreOrLess==0)   {
+        if(this->nbCreditsCurrentPlayer>1) this->nbCreditsCurrentPlayer--;
+    }
+    else if(moreOrLess==1) this->nbCreditsCurrentPlayer++;
+    std::ostringstream ss;
+    ss << this->nbCreditsCurrentPlayer;
+    this->view->showNbCreditsChoose(ss.str().c_str());
 }
 
 void ControllerMotion::addUser(){
@@ -166,16 +166,17 @@ void ControllerMotion::deleteUser(){
     }
 }
 
-bool ControllerMotion::checkUsers()	{
-	bool rep=true;
-	if(this->game->getGameUsers()->size()==0){
-		rep=false;
+bool ControllerMotion::checkUsers() {
+    bool rep=true;
+    if(this->game->getGameUsers()->size()==0){
+        rep=false;
         this->view->showMessage("Il faut ajouter des joueurs\n avant de lancer la partie !");
     }
     return rep;
 }
 
 void ControllerMotion::startGame(int type){
+    //cout << "il y a "<<this->game->getGameUsers()->size()<<" tireurs dans la partie\n";
     if(this->isSave == false){
             if(this->database->isConnectedToNetwork()){
                 this->refreshParams();
@@ -252,9 +253,9 @@ int ControllerMotion::scanQRCode(){
         exit(0);
     }
     if(pid > 1 )    { //parent
-    	fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
-    	fichierUtilisateurEcriture << "0";
-    	fichierUtilisateurEcriture.close();
+        fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
+        fichierUtilisateurEcriture << "0";
+        fichierUtilisateurEcriture.close();
         string chaine="0";
         while(chaine=="0")    {
             fichierUtilisateurLecture.open(cheminFichier);
@@ -271,9 +272,9 @@ int ControllerMotion::scanQRCode(){
             fichierUtilisateurLecture.close();
         }
         kill(pid, SIGKILL);
-        while(chaine.at(curseur) != ',')	{
-        	idStr+=chaine.at(curseur);
-        	curseur++;
+        while(chaine.at(curseur) != ',')    {
+            idStr+=chaine.at(curseur);
+            curseur++;
         }
         id=atoi(idStr.c_str());
         std::cout << "ID de la carte scannée : " << id << "\n";
@@ -326,10 +327,8 @@ bool ControllerMotion::connectUser(const char* id){
             this->view->showMessage("Impossible de se connecter avec \n un compte evenement");
             return false;            
         }
-
     }
             return false;
-
 */
     UserInfo * user = this->database->findUserById(id);
     if(user != NULL){
@@ -411,7 +410,7 @@ void ControllerMotion::changePlayer(){
         this->view->showEndGame(this->game->getGameUsers());        
     }
     else{
-        UserInfo* current = this->game->getGameCurrentUser();
+        /*UserInfo* current = this->game->getGameCurrentUser();
         for(unsigned int i = 0; i < this->game->getGameUsers()->size(); i++){
             if(this->game->getGameUsers()->at(i) == current){
                 if(i != this->game->getGameUsers()->size() - 1){
@@ -423,7 +422,8 @@ void ControllerMotion::changePlayer(){
                     this->game->setGameCurrentUser(this->game->getGameUsers()->at(0));
                 }
             }
-        }
+        }*/
+        this->game->setGameCurrentUser(this->game->getNextUser());
         this->view->showGame(this->game);
     }
 }
@@ -445,37 +445,37 @@ void ControllerMotion::shoot(int keyval){
     }
     if(canIShoot){
         if(keyval>=65457&&keyval<=65465){
-        	switch(keyval)	{
-        		case 65457:
-        			numLanceur=1;
-        			break;
-        		case 65458:
-        			numLanceur=2;
-        			break;
-        		case 65459:
-        			numLanceur=3;
-        			break;
-        		case 65460:
-        			numLanceur=4;
-        			break;
-        		case 65461:
-        			numLanceur=5;
-        			break;
-        		case 65462:
-        			numLanceur=6;
-        			break;
-        		case 65463:
-        			numLanceur=7;
-        			break;
-        		case 65464:
-        			numLanceur=8;
-        			break;
-        		case 65465:
-        			numLanceur=9;
-        			break;
-        	}
-        	numCanal=atoi(this->game->getGameChannel()->getChannelNumber().c_str());
-        	cout << "Tir du lanceur " << numLanceur << " sur le canal " << numCanal << endl;
+            switch(keyval)  {
+                case 65457:
+                    numLanceur=1;
+                    break;
+                case 65458:
+                    numLanceur=2;
+                    break;
+                case 65459:
+                    numLanceur=3;
+                    break;
+                case 65460:
+                    numLanceur=4;
+                    break;
+                case 65461:
+                    numLanceur=5;
+                    break;
+                case 65462:
+                    numLanceur=6;
+                    break;
+                case 65463:
+                    numLanceur=7;
+                    break;
+                case 65464:
+                    numLanceur=8;
+                    break;
+                case 65465:
+                    numLanceur=9;
+                    break;
+            }
+            numCanal=atoi(this->game->getGameChannel()->getChannelNumber().c_str());
+            cout << "Tir du lanceur " << numLanceur << " sur le canal " << numCanal << endl;
             this->sendWave(numLanceur,numCanal);
             this->game->getGameCurrentUser()->decrPlateau(1);
             this->game->decrPlat(1);
@@ -491,55 +491,55 @@ void ControllerMotion::shoot(int keyval){
 }
 
 void ControllerMotion::sendWave(int numLanceur16, int numCanal16){
-	int fd;
-	int numCanal10=base16ToBase10(numCanal16);
-	int numLanceur10=base16ToBase10(numLanceur16);
- 	fd = open("/dev/ttyUSB0", O_WRONLY | O_NOCTTY | O_NDELAY );	
+    int fd;
+    int numCanal10=base16ToBase10(numCanal16);
+    int numLanceur10=base16ToBase10(numLanceur16);
+    fd = open("/dev/ttyUSB0", O_WRONLY | O_NOCTTY | O_NDELAY ); 
 
-	struct termios SerialPortSettings;	
+    struct termios SerialPortSettings;  
     tcgetattr(fd, &SerialPortSettings);
-	cfsetospeed(&SerialPortSettings,B9600); 
-	tcsetattr(fd,TCSANOW,&SerialPortSettings);
+    cfsetospeed(&SerialPortSettings,B9600); 
+    tcsetattr(fd,TCSANOW,&SerialPortSettings);
 
-	/*Construction de la trame d'activation du relais*/
-	uint8_t on[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
-	for(int i = 5; i<11; ++i){
-		on[i] = 0x00;
-	}
-	for (int i = 11; i<13; ++i){
-		on[i] = 0xFF;
-	}
-	add_addr16(on, numCanal10, numLanceur10);
-	on[15] = 0x02;
-	on[16] = 0x44; 
-	on[17] = 0x31;
-	on[18] = 0x05;
-	add_cksum(on, sizeof(on));
+    /*Construction de la trame d'activation du relais*/
+    uint8_t on[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
+    for(int i = 5; i<11; ++i){
+        on[i] = 0x00;
+    }
+    for (int i = 11; i<13; ++i){
+        on[i] = 0xFF;
+    }
+    add_addr16(on, numCanal10, numLanceur10);
+    on[15] = 0x02;
+    on[16] = 0x44; 
+    on[17] = 0x31;
+    on[18] = 0x05;
+    add_cksum(on, sizeof(on));
 
-	/*Construction de la trame de désactivation du relais*/
-	uint8_t off[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
-	for(int i = 5; i<11; ++i){
-		off[i] = 0x00;
-	}
-	for (int i = 11; i<13; ++i){
-		off[i] = 0xFF;
-	}
-	add_addr16(off, 255, 254);
-	off[15] = 0x02;
-	off[16] = 0x44; 
-	off[17] = 0x31;
-	off[18] = 0x04;
-	add_cksum(off, sizeof(off));
+    /*Construction de la trame de désactivation du relais*/
+    uint8_t off[20] = {0x7E, 0x00, 0x10, 0x17, 0x01};
+    for(int i = 5; i<11; ++i){
+        off[i] = 0x00;
+    }
+    for (int i = 11; i<13; ++i){
+        off[i] = 0xFF;
+    }
+    add_addr16(off, 255, 254);
+    off[15] = 0x02;
+    off[16] = 0x44; 
+    off[17] = 0x31;
+    off[18] = 0x04;
+    add_cksum(off, sizeof(off));
 
-	write(fd,on,sizeof(on));
-	close(fd);
+    write(fd,on,sizeof(on));
+    close(fd);
 
 
-	int fd2 = open("/dev/ttyUSB0",O_WRONLY | O_NOCTTY | O_NDELAY);
-	sleep(0.1);
-	write(fd2, off, sizeof(off));
-	cout<<"Delai de "<<delaiRafale<<"secondes";
-	close(fd2);
+    int fd2 = open("/dev/ttyUSB0",O_WRONLY | O_NOCTTY | O_NDELAY);
+    sleep(0.1);
+    write(fd2, off, sizeof(off));
+    cout<<"Delai de "<<delaiRafale<<"secondes";
+    close(fd2);
 }
 
 void ControllerMotion::restartGame(){
@@ -563,8 +563,8 @@ void ControllerMotion::checkBackup(){
     }
 }
 
-float ControllerMotion::getDelaiRafale()	{
-	return this->delaiRafale;
+float ControllerMotion::getDelaiRafale()    {
+    return this->delaiRafale;
 }
 
 void ControllerMotion::readBackup(int keyValue){   
@@ -619,39 +619,39 @@ void ControllerMotion::confirmPwd(int choice){
 }
 
 void ControllerMotion::pushLetter(int key){
-	cout<<"je suis dans pushletter";
-	cout << this->pwd;
+    cout<<"je suis dans pushletter";
+    cout << this->pwd;
     switch(key){
         case 65457:
-			this->pwd+='1';
-			break;
-		case 65458:
-			this->pwd+='2';
-			break;
-		case 65459:
-			this->pwd+='3';
-			break;
-		case 65460:
-			this->pwd+='4';
-			break;
-		case 65461:
-			this->pwd+='5';
-			break;
-		case 65462:
-			this->pwd+='6';
-			break;
-		case 65463:
-			this->pwd+='7';
-			break;
-		case 65464:
-			this->pwd+='8';
-			break;
-		case 65465:
-			this->pwd+='9';
-			break;
-		case 65466:
-			this->pwd+='0';
-			break;
+            this->pwd+='1';
+            break;
+        case 65458:
+            this->pwd+='2';
+            break;
+        case 65459:
+            this->pwd+='3';
+            break;
+        case 65460:
+            this->pwd+='4';
+            break;
+        case 65461:
+            this->pwd+='5';
+            break;
+        case 65462:
+            this->pwd+='6';
+            break;
+        case 65463:
+            this->pwd+='7';
+            break;
+        case 65464:
+            this->pwd+='8';
+            break;
+        case 65465:
+            this->pwd+='9';
+            break;
+        case 65466:
+            this->pwd+='0';
+            break;
     }
 }
 
@@ -712,27 +712,26 @@ string ControllerMotion::getPlatSent(){
 }
 
 void ControllerMotion::add_cksum(uint8_t p[], int pktsize){
-	  uint8_t cksum = 0;  // start with a zero checksum
-	  for (int i = 3; i < pktsize-1; i++) {  // skip the Start and len, start with byte 4.
-	    // (remembering that C arrays start at 0, not 1.)
-	    cksum += p[i];    // Add in this byte.
-	  }  // next byte
-	  cksum &= 0xFF;        // low order 8 bits
-	  cksum = 0xFF - cksum; // subtract from 0xFF
-	  p[19] = cksum;
+      uint8_t cksum = 0;  // start with a zero checksum
+      for (int i = 3; i < pktsize-1; i++) {  // skip the Start and len, start with byte 4.
+        // (remembering that C arrays start at 0, not 1.)
+        cksum += p[i];    // Add in this byte.
+      }  // next byte
+      cksum &= 0xFF;        // low order 8 bits
+      cksum = 0xFF - cksum; // subtract from 0xFF
+      p[19] = cksum;
 }
 
 void ControllerMotion::add_addr16(uint8_t p[], int channel, int remote){
-	uint8_t ch = (uint8_t) channel;
-	uint8_t re = (uint8_t) remote;
-	p[13] = ch;
-	p[14] = re;
+    uint8_t ch = (uint8_t) channel;
+    uint8_t re = (uint8_t) remote;
+    p[13] = ch;
+    p[14] = re;
 }
 
-int ControllerMotion::base16ToBase10(int hex)	{
-	int dizaine = hex / 10;
-	int unite = hex%10;
-	int ret = dizaine*16 + unite;
-	return ret;
+int ControllerMotion::base16ToBase10(int hex)   {
+    int dizaine = hex / 10;
+    int unite = hex%10;
+    int ret = dizaine*16 + unite;
+    return ret;
 }
-

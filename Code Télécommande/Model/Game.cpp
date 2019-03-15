@@ -69,7 +69,7 @@ using namespace std;
 
     UserInfo* Game::getNextUser() const{
         UserInfo* current = this->getGameCurrentUser();
-        for(unsigned int i = 0; i < this->getGameUsers()->size(); i++){
+        /*for(unsigned int i = 0; i < this->getGameUsers()->size(); i++){
             if(this->getGameUsers()->at(i) == current){
                 if(i != this->getGameUsers()->size() - 1){
                     return this->getGameUsers()->at(i + 1);
@@ -83,7 +83,19 @@ using namespace std;
                     }
                 }
             }
+        }*/
+        if(this->getGameUsers()->size()==1) {
+            return current;
+        }   else    {
+            for(unsigned int i=0;i<this->getGameUsers()->size();i++)  {
+                if(this->getGameUsers()->at(i)==current)    {
+                    if(i+1==this->getGameUsers()->size())   {
+                        return this->getGameUsers()->at(0);
+                    }   else return this->getGameUsers()->at(i+1);
+                }
+            }
         }
+        
         return NULL;
     }
 

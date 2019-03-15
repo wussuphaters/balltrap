@@ -166,8 +166,9 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                     case 65455:
                         break;
                     case 65450:
-                        viewNo = 5;
-                        this->controller->redirectAfterMessage();
+                        this->controller->restartGame();
+                        //viewNo = 5;
+                        //this->controller->redirectAfterMessage();
                         break;
                     case 65453:
                         cout << "vue4";
@@ -282,7 +283,7 @@ bool ViewMotion::on_key_press (GdkEventKey *e)
                     break;
                     default:
                         this->controller->shoot(e->keyval);
-                        sleep(this->controller->getDelaiRafale());
+                        //sleep(this->controller->getDelaiRafale());
                         break;
                 }
     }
@@ -346,7 +347,10 @@ void ViewMotion::showGame(Game * game){
     string label3Content = "";
     string label5Content = "Score : ";
     string label6Content = "";
-
+    cout<< "\n\n";
+    cout<<" tireur actuel : "<<game->getGameCurrentUser();
+    cout<<"prochain tireur : "<<game->getNextUser();
+    cout<< "\n\n";
     label1Content+=game->getGameChannel()->getChannelNumber();
 
     label2Content+=game->getNextUser()->getUser()->getUserFirstName()+" "+game->getNextUser()->getUser()->getUserLastName()[0]+".";
@@ -696,7 +700,7 @@ void ViewMotion::showEndGame(std::vector<UserInfo*>* userList){
     label2.set_label(left);
     label3.set_label(right);
     label7.set_label("");
-    label8.set_label("Suivant");
+    label8.set_label("Nouvelle Partie");
     label9.set_label("");
 
     label1.set_name("listelabel1");
@@ -738,7 +742,6 @@ void ViewMotion::showEndGame(std::vector<UserInfo*>* userList){
     label7.set_label("Non");
     label8.set_label(" ");
     label9.set_label("Oui");
-
     label1.set_name("razlabel1");
     label7.set_name("razlabel7");
     label8.set_name("razlabel8");
@@ -747,21 +750,17 @@ void ViewMotion::showEndGame(std::vector<UserInfo*>* userList){
     grid.insert_column(0);
     grid.insert_column(0);
     grid.insert_column(0);
-
     grid.insert_row(0);
     grid.insert_row(0);
     grid.insert_row(0);
     grid.insert_row(0);
     grid.insert_row(0);
-
     grid.attach(label1, 0, 0, 3, 5);
     grid.attach(label7, 0, 5, 1, 1);
     grid.attach(label8, 1, 5, 1, 1);
     grid.attach(label9, 2, 5, 1, 1);
-
     MainWindow->add(grid); 
     MainWindow->show_all(); 
-
 }*/
 
 void ViewMotion::showAskChangeChannel(){
