@@ -29,11 +29,11 @@ private:
 
 public:
    
-    int userId, userLicenceYear, categoryId, userGenre;
+    int userId, userRFIDTagNumber, userLicenceYear, categoryId, userGenre;
     std::string userFirstName, userLastName, userMail, userAddress, userAddressSupplement, userZipCode, userCity, userBirthdate, userLicenceNumber, userFixPhone, userMobilePhone, userCommentary;
     
     //constructeurs
-    User(int userId,std::string userFirstName, std::string userLastName, std::string userMail, std::string userAddress, std::string userAddressSupplement, std::string userZipCode, std::string userCity, std::string userBirthdate, std::string userLicenceNumber, std::string userFixPhone, std::string userMobilePhone, std::string userCommentary, int userLicenceYear, int categoryId, int userGenre);
+    User(int userId,int userRFIDTagNumber, std::string userFirstName, std::string userLastName, std::string userMail, std::string userAddress, std::string userAddressSupplement, std::string userZipCode, std::string userCity, std::string userBirthdate, std::string userLicenceNumber, std::string userFixPhone, std::string userMobilePhone, std::string userCommentary, int userLicenceYear, int categoryId, int userGenre);
     User(User &user);
     User(Json::Value res);
     User();
@@ -57,6 +57,7 @@ public:
     void setUserGenre(int number);
 
     //getters
+    int getRFIDTagNumber() const;
     std::string getUserFirstName() const;
     std::string getUserLastName() const;
     std::string getUserMail() const;

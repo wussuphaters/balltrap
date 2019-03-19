@@ -39,6 +39,8 @@ public:
     //Définit les actions à réaliser en fonction de l'évènement (appuie clavier) réalisé
     bool on_key_release_event(GdkEventKey*) override;
 
+    void showScan();
+
     //Affichage de la vue de jeu principale
     void showGame(Game*);
 
