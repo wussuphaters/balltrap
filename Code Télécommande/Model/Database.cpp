@@ -32,6 +32,26 @@ UserInfo* Database::findUserById(string id){
   return NULL;
 }
 
+int Database::findUserByRFIDTagNumber(string RFIDTagNumber)  {
+    cout<<"dans find user by rfid tag number"<<endl;
+    string chaine=this->urlApi+"user/rfid/"+RFIDTagNumber;
+    char * urlConcat = &chaine[0u];
+    Json::Value res = getJsonFromApi(urlConcat);
+    if(res == "[]"){
+      return -1;
+    } else if(res==0) {
+      return -1;
+    }
+    else{
+      User * user = new User(res);
+      UserCredit * userCredit = new UserCredit(res);
+      UserAuthentification * userAuth = new UserAuthentification(res);
+      UserInfo * ret = new UserInfo(*user, *userAuth, *userCredit);
+      return ret->getUser()->getUserId();
+    }    
+  return -1;
+}
+
 vector<Channel*> Database::getChannels(){
   vector<Channel*> list;
   string chaine = this->urlApi+"channels/";
@@ -227,6 +247,7 @@ size_t Database::write_to_string(void *ptr, size_t size, size_t count, void *str
 }
 
 Json::Value Database::getJsonFromApi(const char* url){
+  cout << "dans get json from api"<<endl;
   this->curl = curl_easy_init();
   Json::Value root;   
   if(this->curl) {

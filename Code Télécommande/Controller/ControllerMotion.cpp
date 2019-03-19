@@ -18,7 +18,7 @@
 using namespace std;
 
 ControllerMotion::ControllerMotion(){
-    this->database = new Database("http://192.168.0.109/balltrap/public/api/command/");
+    this->database = new Database("http://192.168.43.240/balltrap/public/api/command/");
     this->game = new Game();
     this->channelPointer=0;
     this->isParamRefreshed=false;
@@ -71,7 +71,7 @@ void ControllerMotion::redirectAfterMessage(){
             this->view->showEndGame(this->game->getGameUsers());
             break;
         case 5:
-            this->view->showAskChangeChannel();
+            this->view->showScan();
             break;
         case 6:
             this->view->showSaveChoose();
@@ -129,26 +129,37 @@ void ControllerMotion::changeNbCredits(int moreOrLess)  {
     this->view->showNbCreditsChoose(ss.str().c_str());
 }
 
-void ControllerMotion::addUser(){
+void ControllerMotion::addUser(string tagnumber){
+    cout << "dans add user"<<endl;
     if(this->game->getGameUsers()->size()<10){
-        int id = this->scanQRCode();
-        if(id != -1){
-            if(this->database->isConnectedToNetwork()){
-                if(!this->isParamRefreshed){
-                    this->refreshParams();
+        if(tagnumber!="0")  {
+            int id = this->database->findUserByRFIDTagNumber(tagnumber);
+            cout<<id<< "scannee"<<endl;
+            if(id == -1){
+                this->view->showMessage("Aucun tireur ne correspond à cette carte\nVeuillez recommencer");
+            }   
+            else if(id==0)  {
+                this->view->showMessage("Aucun tireur ne correspond à cette carte\nVeuillez recommencer");
+            }   else   {
+                if(this->database->isConnectedToNetwork()){
+                    if(!this->isParamRefreshed){
+                        this->refreshParams();
+                    }
+                    int nbCred = this->database->howManyCredit(id,1);
+                    if(nbCred==0) this->view->showMessage("Vous n'avez plus de crédits\nImpossible de rejoindre la partie !");
+                    else if(nbCred==-1) this->view->showMessage("Impossible de récupérer le nombre de crédits !");
+                    else if(nbCred<nbCreditsCurrentPlayer) this->view->showMessage("Vous n'avez plus assez de crédits\nImpossible de rejoindre la partie !");
+                    else    {
+                        this->connectUser(to_string(id).c_str());
+                    }
                 }
-                int nbCred = this->database->howManyCredit(id,1);
-                if(nbCred==0) this->view->showMessage("Vous n'avez plus de crédits\nImpossible de rejoindre la partie !");
-                else if(nbCred==-1) this->view->showMessage("Impossible de récupérer le nombre de crédits !");
-                else if(nbCred<nbCreditsCurrentPlayer) this->view->showMessage("Vous n'avez plus assez de crédits\nImpossible de rejoindre la partie !");
-                else this->connectUser(to_string(id).c_str());
-            }
-            else{
-                this->view->showMessage("Aucune connexion internet\nVeuillez vous approcher d'un\nrépéteur wi-fi et recommencer");               
-            }
+                else{
+                    this->view->showMessage("Aucune connexion internet\nVeuillez vous approcher d'un\nrépéteur wi-fi et recommencer");               
+                }
+            } 
         }
         else{
-            this->view->showMessage("Aucun code QR valide scanné\nVeuillez recommencer");        
+            this->view->showMessage("Aucune carte scannée\nVeuillez recommencer");        
         }
     }
     else{
@@ -159,7 +170,7 @@ void ControllerMotion::addUser(){
 void ControllerMotion::deleteUser(){
     if(this->game->getGameUsers()->size()>0){
         this->game->getGameUsers()->pop_back();
-        this->view->showMessage("Utilisateur supprimé avec succès");    
+        this->redirectAfterMessage();   
     }
     else{
         this->view->showMessage("Aucune personne connectée");            
@@ -230,106 +241,8 @@ void ControllerMotion::startGame(int type){
     }
 }
 
-
-int ControllerMotion::scanQRCode(){
-    int id=0,i=0,tempsAttenteMax=10,curseur=14;
-    string idStr="";
-    ifstream fichierUtilisateurLecture;
-    ofstream fichierUtilisateurEcriture;
-    const char* cheminFichier="/home/pi/dirlist.txt";
-    pid_t pid = fork();
-
-    if(pid == 0 )   { //enfant
-        int fd;
-        if((fd = open(cheminFichier, O_RDWR | O_CREAT, 0666))==-1){
-            perror("open");
-            return -1;
-        }
-        dup2(fd,STDOUT_FILENO);
-        dup2(fd,STDERR_FILENO);
-        close(fd);
-        execlp("zbarcam","zbarcam","--prescale=100x100",NULL);
-        sleep(2);
-        exit(0);
-    }
-    if(pid > 1 )    { //parent
-        fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
-        fichierUtilisateurEcriture << "0";
-        fichierUtilisateurEcriture.close();
-        string chaine="0";
-        while(chaine=="0")    {
-            fichierUtilisateurLecture.open(cheminFichier);
-            std::cout << i+1 << '\n';
-            getline(fichierUtilisateurLecture,chaine);
-            i++;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            if(i==tempsAttenteMax)   {
-                std::cout << "timeout" << '\n';
-                fichierUtilisateurLecture.close();
-                kill(pid, SIGKILL);
-                return -1;
-            }
-            fichierUtilisateurLecture.close();
-        }
-        kill(pid, SIGKILL);
-        while(chaine.at(curseur) != ',')    {
-            idStr+=chaine.at(curseur);
-            curseur++;
-        }
-        id=atoi(idStr.c_str());
-        std::cout << "ID de la carte scannée : " << id << "\n";
-    }
-    fichierUtilisateurEcriture.open(cheminFichier, ios::out | ios::trunc);
-    fichierUtilisateurEcriture << "0";
-    fichierUtilisateurEcriture.close();
-
-    return id;
-}
-
 bool ControllerMotion::connectUser(const char* id){
-    /*UserInfo * user = this->database->findUserById(id);
-    if(user != NULL){
-        if(user->getUser()->getUserFirstName().length() > 12){
-            user->getUser()->setUserFirstName(user->getUser()->getUserFirstName().substr(0,10));
-        }
-        if(user->getUserAuthentification()->getUserType() == "MEMBRE"){
-            for( unsigned int i=0;i<this->game->getGameUsers()->size();i++){
-                if(this->game->getGameUsers()->at(i)->getUser()->getUserId() == user->getUser()->getUserId()){
-                    this->view->showMessage("Utilisateur déjà connecté");
-                    return false;
-                }
-            }
-            this->game->getGameUsers()->push_back(user);
-            this->view->showMessage("Utilisateur ajouté avec succès");
-            return true;
-        }
-        else if(user->getUserAuthentification()->getUserType() == "BUREAU" || user->getUserAuthentification()->getUserType() == "ADMIN"){
-            int cpt = 0;
-            for( unsigned int i=0;i<this->game->getGameUsers()->size();i++){
-                if(this->game->getGameUsers()->at(i)->getUser()->getUserId() == user->getUser()->getUserId()){
-                    cpt++;
-                }
-            }
-            if(cpt==0){
-                this->game->getGameUsers()->push_back(user);
-                this->view->showMessage("Utilisateur ajouté avec succès");
-            }
-            else{
-                stringstream cptString;
-                cptString << cpt;
-                user->getUser()->setUserLastName(user->getUser()->getUserLastName()+" ("+cptString.str()+")");
-                this->game->getGameUsers()->push_back(user);
-                this->view->showMessage("Utilisateur ajouté avec succès");
-            }
-            return true;
-        }
-        else{
-            this->view->showMessage("Impossible de se connecter avec \n un compte evenement");
-            return false;            
-        }
-    }
-            return false;
-*/
+    cout<<"dans connect user";
     UserInfo * user = this->database->findUserById(id);
     if(user != NULL){
         if(user->getUser()->getUserFirstName().length() > 12){
@@ -353,7 +266,7 @@ bool ControllerMotion::connectUser(const char* id){
             }
             else{
                 this->game->getGameUsers()->push_back(user);
-                this->view->showMessage("Utilisateur ajouté avec succès");
+                this->redirectAfterMessage();
                 return true;
             }
             
@@ -372,15 +285,14 @@ bool ControllerMotion::connectUser(const char* id){
                 }
                 if(cpt==0){
                     this->game->getGameUsers()->push_back(user);
-                    this->view->showMessage("Utilisateur ajouté avec succès");
                 }
                 else{
                     stringstream cptString;
                     cptString << cpt;
                     user->getUser()->setUserLastName(user->getUser()->getUserLastName()+" ("+cptString.str()+")");
                     this->game->getGameUsers()->push_back(user);
-                    this->view->showMessage("Utilisateur ajouté avec succès");
                 }
+                this->redirectAfterMessage();
                 return true;
             }
         }
@@ -410,19 +322,6 @@ void ControllerMotion::changePlayer(){
         this->view->showEndGame(this->game->getGameUsers());        
     }
     else{
-        /*UserInfo* current = this->game->getGameCurrentUser();
-        for(unsigned int i = 0; i < this->game->getGameUsers()->size(); i++){
-            if(this->game->getGameUsers()->at(i) == current){
-                if(i != this->game->getGameUsers()->size() - 1){
-                    this->game->setGameCurrentUser(this->game->getGameUsers()->at(i + 1));
-                }
-                else{
-                    this->game->getGameUsers()->push_back(this->game->getGameUsers()->at(0));
-                    this->game->getGameUsers()->erase(this->game->getGameUsers()->begin());
-                    this->game->setGameCurrentUser(this->game->getGameUsers()->at(0));
-                }
-            }
-        }*/
         this->game->setGameCurrentUser(this->game->getNextUser());
         this->view->showGame(this->game);
     }

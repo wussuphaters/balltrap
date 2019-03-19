@@ -69,7 +69,7 @@ public:
     *  et en vérifiant qu'il respecte bien les conditions (nombre de plateaux, type de compte...) 
     *  avec connectUser
     */
-    void addUser();
+    void addUser(std::string);
     bool connectUser(const char*);
 
     //Permet de retirer un tireur de la liste
@@ -84,6 +84,9 @@ public:
 
     //Scanne un code QR d'utilisateur
     int scanQRCode();
+
+    //Scanne une carte RFID et recupere son code
+    std::string scanRFIDTag();
 
     //Permet de changer à la main le delai entre chaque tir (dans le mode rafale)
     void changeDelay(int);

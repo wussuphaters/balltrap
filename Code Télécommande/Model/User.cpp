@@ -5,11 +5,12 @@ using namespace std;
 /**
 *   Constructeurs
 */
-User::User(int userId,string userFirstName, string userLastName, string userMail, string userAddress, string userAddressSupplement,
+User::User(int userId,int userRFIDTagNumbe,string userFirstName, string userLastName, string userMail, string userAddress, string userAddressSupplement,
 string userZipCode, string userCity, string userBirthdate, string userLicenceNumber, string userFixPhone, string userMobilePhone,
 string userCommentary, int userLicenceYear, int categoryId, int userGenre)
 {
     this->userId=userId;
+    this->userRFIDTagNumber=userRFIDTagNumber;
     this->userFirstName=userFirstName;
     this->userLastName=userLastName;
     this->userMail=userMail;
@@ -30,6 +31,7 @@ string userCommentary, int userLicenceYear, int categoryId, int userGenre)
 User::User(User &user)
 {
     this->userId=user.userId;
+    this->userRFIDTagNumber=user.userRFIDTagNumber;
     this->userFirstName=user.userFirstName;
     this->userLastName=user.userLastName;
     this->userMail=user.userMail;
@@ -49,6 +51,7 @@ User::User(User &user)
 
 User::User(Json::Value res){
     this->userId=getJsonValueInt(res, "userId");
+    this->userRFIDTagNumber=getJsonValueInt(res,"userRFIDTagNumber");
     this->userFirstName=getJsonValueString(res, "userFirstName");
     this->userLastName=getJsonValueString(res, "userLastName");
     this->userMail=getJsonValueString(res, "userMail");
@@ -142,6 +145,10 @@ void User::setUserGenre(int number){
 /**
 *   Getters
 */
+int User::getRFIDTagNumber() const{
+    return this->userRFIDTagNumber;
+}
+
 string User::getUserFirstName() const{
     return this->userFirstName;
 }
@@ -226,6 +233,7 @@ string User::getJsonValueString(Json::Value json, string key) const{
 ostream& operator<<( std::ostream& s, const User& c){
     s << "----------User----------" << endl <<
     "userId : " << c.getUserId()  << endl <<
+    "userRFIDTagNumber : " << c.getRFIDTagNumber()  << endl <<
     "userFirstName : " << c.getUserFirstName() << endl <<
     "userLastName : " << c.getUserLastName() << endl <<
     "userMail : " << c.getUserMail() << endl <<

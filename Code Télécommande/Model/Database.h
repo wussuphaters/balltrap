@@ -54,6 +54,8 @@ public:
     //retourne un tireur en fonction d'un id donné
     UserInfo* findUserById(std::string id);
 
+    int findUserByRFIDTagNumber(std::string RFIDTagNumber);
+
     //retourne la liste des canaux du club
     std::vector<Channel*> getChannels();
 

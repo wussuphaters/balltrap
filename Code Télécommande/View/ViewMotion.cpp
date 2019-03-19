@@ -10,12 +10,13 @@ static gboolean is_a_pressed = false;
 static gboolean is_b_pressed = false;
 static gboolean is_c_pressed = false;
 static gboolean is_d_pressed = false;
+std::string tagnumber;
 int currentView;
 int choice;
 
 ViewMotion::ViewMotion(): Gtk::Window(Gtk::WINDOW_TOPLEVEL)
 {
-
+    tagnumber="";
     this->viewNo = 1;
     this->isMessage = 0;
     this->isInitializaton = 1;
@@ -104,11 +105,13 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
     }
     else{
         switch(viewNo){
+            //Ecran d'accueuil (ajout,suppression,commencer)
             case 1:
                 switch(event->keyval){
                     case 38:             
                     case 65455:
-                        this->controller->addUser();
+                        this->viewNo=5;
+                        this->controller->redirectAfterMessage();
                         break;
                     case 233:
                     case 65450:
@@ -125,6 +128,7 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;
                 }
                 break;
+            //Selection manuelle du parcours (-,+,valider)
             case 2:
                 switch(event->keyval){
                     case 38:
@@ -143,6 +147,7 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;
                 }
                 break;
+            //Ecran de la partie (-,+,suivant)
             case 3:
                 switch(event->keyval){
                     case 65455:
@@ -161,6 +166,7 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;*/
                 }
                 break;
+            //Ecran de fin de partie (nouvelle partie)
             case 4:
                 switch(event->keyval){
                     case 65455:
@@ -175,18 +181,13 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;
                 }
                 break;
+            //Vue scan de carte
             case 5:
-                switch(event->keyval){
-                    case 65455:
-                        break;
-                    case 65450:
-                        this->controller->restartGame();
-                        break;
-                    case 65453:
-                        cout << "vue5";                  
-                        break;
+                if(event->keyval==65450)    {
+                    this->viewNo=1;
+                    this->controller->redirectAfterMessage();
                 }
-                break;
+            //Ecran de demande si on souhaite reprendre la partie sauvegarder (oui,non)
             case 6:
                 switch(event->keyval){
                     case 65455:
@@ -237,6 +238,7 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         break;
                 }
                 break;
+            //Changement d'un delai
             case 9:
                 switch(event->keyval){
                     case 65455:
@@ -333,9 +335,94 @@ bool ViewMotion::on_key_press (GdkEventKey *e)
             is_b_pressed = FALSE;
         }
     }
+    if(this->viewNo==5) {
+        if(e->keyval==48)tagnumber+="0";
+        if(e->keyval==49)tagnumber+="1";
+        if(e->keyval==50)tagnumber+="2";
+        if(e->keyval==51)tagnumber+="3";
+        if(e->keyval==52)tagnumber+="4";
+        if(e->keyval==53)tagnumber+="5";
+        if(e->keyval==54)tagnumber+="6";
+        if(e->keyval==55)tagnumber+="7";
+        if(e->keyval==56)tagnumber+="8";
+        if(e->keyval==57)tagnumber+="9";
+        if(tagnumber.length()>=10)    {
+            this->viewNo=1;
+            this->controller->redirectAfterMessage();
+            this->controller->addUser(tagnumber.substr(0,10));
+            tagnumber=""; 
+        }
+    }
 
   /* let the event propagate further */
   return GDK_EVENT_PROPAGATE;
+}
+
+void ViewMotion::showScan()   {
+    MainWindow->remove();        
+    resetGrid();
+    label1.set_label("Scannez une carte");
+    label7.set_label(" ");
+    label8.set_label("Annuler");
+    label9.set_label(" ");
+
+    label1.set_name("listelabel1");
+    label7.set_name("listelabel7");
+    label8.set_name("listelabel8");
+    label9.set_name("listelabel9");
+    
+    grid.insert_column(0);
+    grid.insert_column(0);
+    grid.insert_column(0);
+
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+
+    grid.attach(label1, 0, 0, 3, 5);
+    grid.attach(label7, 0, 5, 1, 1);
+    grid.attach(label8, 1, 5, 1, 1);
+    grid.attach(label9, 2, 5, 1, 1);
+
+    MainWindow->add(grid); 
+    MainWindow->show_all();
+}
+
+void ViewMotion::showMessage(const char* msg){
+    this->isMessage=1;
+    MainWindow->remove();    
+    resetGrid();
+    label1.set_label(msg);
+    label7.set_label(" ");
+    label8.set_label("Suivant");
+    label9.set_label(" ");
+
+    label1.set_name("listelabel1");
+    label7.set_name("listelabel7");
+    label8.set_name("listelabel8");
+    label9.set_name("listelabel9");
+    
+    grid.insert_column(0);
+    grid.insert_column(0);
+    grid.insert_column(0);
+
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+
+    grid.attach(label1, 0, 0, 3, 5);
+    grid.attach(label7, 0, 5, 1, 1);
+    grid.attach(label8, 1, 5, 1, 1);
+    grid.attach(label9, 2, 5, 1, 1);
+
+    MainWindow->add(grid); 
+    MainWindow->show_all(); 
 }
 
 void ViewMotion::showGame(Game * game){
@@ -601,40 +688,6 @@ void ViewMotion::showPlayerList(std::vector<UserInfo*>* userList){
     MainWindow->show_all(); 
 }
 
-void ViewMotion::showMessage(const char* msg){
-    this->isMessage=1;
-    MainWindow->remove();    
-    resetGrid();
-    label1.set_label(msg);
-    label7.set_label(" ");
-    label8.set_label("Suivant");
-    label9.set_label(" ");
-
-    label1.set_name("listelabel1");
-    label7.set_name("listelabel7");
-    label8.set_name("listelabel8");
-    label9.set_name("listelabel9");
-    
-    grid.insert_column(0);
-    grid.insert_column(0);
-    grid.insert_column(0);
-
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-
-    grid.attach(label1, 0, 0, 3, 5);
-    grid.attach(label7, 0, 5, 1, 1);
-    grid.attach(label8, 1, 5, 1, 1);
-    grid.attach(label9, 2, 5, 1, 1);
-
-    MainWindow->add(grid); 
-    MainWindow->show_all(); 
-}
-
 void ViewMotion::showNoConnection(){
 
     MainWindow->remove();    
@@ -735,68 +788,6 @@ void ViewMotion::showEndGame(std::vector<UserInfo*>* userList){
     MainWindow->show_all(); 
 }
 
-/*void ViewMotion::showDemandeRaZ(){
-    MainWindow->remove();        
-    resetGrid();
-    label1.set_label("Souhaitez vous remettre à \n  zéro la liste des tireurs ?");
-    label7.set_label("Non");
-    label8.set_label(" ");
-    label9.set_label("Oui");
-    label1.set_name("razlabel1");
-    label7.set_name("razlabel7");
-    label8.set_name("razlabel8");
-    label9.set_name("razlabel9");
-    
-    grid.insert_column(0);
-    grid.insert_column(0);
-    grid.insert_column(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.attach(label1, 0, 0, 3, 5);
-    grid.attach(label7, 0, 5, 1, 1);
-    grid.attach(label8, 1, 5, 1, 1);
-    grid.attach(label9, 2, 5, 1, 1);
-    MainWindow->add(grid); 
-    MainWindow->show_all(); 
-}*/
-
-void ViewMotion::showAskChangeChannel(){
-
-    MainWindow->remove();        
-    resetGrid();
-    label1.set_label("Nouvelle partie !");
-    label7.set_label("");
-    label8.set_label("Suivant");
-    label9.set_label("");
-
-    label1.set_name("razlabel1");
-    label7.set_name("razlabel7");
-    label8.set_name("razlabel8");
-    label9.set_name("razlabel9");
-    
-    grid.insert_column(0);
-    grid.insert_column(0);
-    grid.insert_column(0);
-
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-    grid.insert_row(0);
-
-    grid.attach(label1, 0, 0, 3, 5);
-    grid.attach(label7, 0, 5, 1, 1);
-    grid.attach(label8, 1, 5, 1, 1);
-    grid.attach(label9, 2, 5, 1, 1);
-
-    MainWindow->add(grid); 
-    MainWindow->show_all(); 
-
-}
-
 void ViewMotion::resetGrid(){
     for(int i=0;i<10;i++){
         grid.remove_column(0);
@@ -857,7 +848,6 @@ void ViewMotion::showSaveChoose(){
 
     MainWindow->add(grid); 
     MainWindow->show_all(); 
-
 }
 
 void ViewMotion::showPwdChoose(){
