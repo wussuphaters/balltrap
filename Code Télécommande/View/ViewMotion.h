@@ -14,7 +14,7 @@ class ViewMotion : public Gtk::Window
 {
 
 private:
-    int viewNo,isMessage,isInitializaton;
+    int viewNo,optionNo,isMessage,isInitializaton;
     Gtk::Window* MainWindow;
     Gtk::Label label1, label2, label3, label4, label5, label6, label7, label8, label9;
     ControllerMotion * controller;
@@ -28,6 +28,7 @@ public:
 
     //getter et setter sur le numéro de la vue
     int getNoView() const;
+    int getNoOption() const;
     void setNoView(int);
 
     /*
@@ -41,11 +42,15 @@ public:
 
     void showScan();
 
+    void showOption(const char*);
+
     //Affichage de la vue de jeu principale
     void showGame(Game*);
 
     //Affichage de la vue du choix de canal
     void showChannelChoose(const char*);
+
+    void showPlatCountTypeChoose(const char*);
 
     //Affichage de la vue de changement de delai entre chaque rafale
     void showDelayChoose(const char*);

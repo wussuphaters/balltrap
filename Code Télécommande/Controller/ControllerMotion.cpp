@@ -14,18 +14,19 @@
 #include <termios.h>
 #include <errno.h>
 #include <stdint.h>
+#include <time.h>
 
 using namespace std;
 
 ControllerMotion::ControllerMotion(){
-    this->database = new Database("http://192.168.43.240/balltrap/public/api/command/");
+    this->database = new Database("http://192.168.0.108/balltrap/public/api/command/");
     this->game = new Game();
     this->channelPointer=0;
     this->isParamRefreshed=false;
     this->isSave = false;
     this->pwd = "";
-    this->delaiRafale=4;
     this->nbCreditsCurrentPlayer=1;
+    this->tempo=0;
 }
 
 void ControllerMotion::setViewMotion(ViewMotion* view){
@@ -39,7 +40,8 @@ void ControllerMotion::run(){
 void ControllerMotion::refreshParams(){
     this->channelList = this->database->getChannels();
     this->game->setGameParameters(database->getParameters());
-    this->platType = atoi(this->game->getParameterFromCode("cptType")->getParameterValue().c_str());
+    //this->platType = atoi(this->game->getParameterFromCode("cptType")->getParameterValue().c_str());
+    this->platType=0;
     this->nbPlatMax = atoi(this->game->getParameterFromCode("nbPlat")->getParameterValue().c_str());
     this->paramDefaultNbPlat = atoi(this->game->getParameterFromCode("defaultNbPlat")->getParameterValue().c_str());
     this->isParamRefreshed=true;
@@ -82,11 +84,38 @@ void ControllerMotion::redirectAfterMessage(){
         case 8:
             this->view->showPlatChoose();
             break;
-        case 9:{
-            std::ostringstream ss;
-            ss << delaiRafale;
-            this->view->showDelayChoose(ss.str().c_str());
-            break;}
+        case 9:
+            {
+                std::string out_string;
+                std::stringstream ss;
+                ss << this->tempo;
+                out_string = ss.str();
+                this->view->showDelayChoose(out_string.c_str());
+            }
+            break;
+        case 10:
+            switch(this->view->getNoOption())   {
+                case 1:
+                    this->view->showOption("Changer de canal");
+                    break;
+                case 2:
+                    this->view->showOption("Ajouter des tireurs");
+                    break;
+                case 3:
+                    this->view->showOption("Temporisation");
+                    break;
+                case 4:
+                    this->view->showOption("Type de compteur");
+                    break;
+            }
+            break;
+        case 11:
+            if(this->getPlatType()==0)  {
+                this->view->showPlatCountTypeChoose("Individuel");
+            }   else{
+                this->view->showPlatCountTypeChoose("Global");
+            }
+            break;
         default:
             break;
     }
@@ -96,12 +125,20 @@ int ControllerMotion::getPlatType(){
     return this->platType;
 }
 
+void ControllerMotion::changePlatCountType()  {
+    if(this->getPlatType()==1)this->platType=0;
+    else this->platType=1;
+    this->redirectAfterMessage();
+}
+
 void ControllerMotion::changeDelay(int moreOrLess)  {
-        if(moreOrLess==0 && this->delaiRafale>4.1) this->delaiRafale=this->delaiRafale-0.1;
-        else if(moreOrLess==1) this->delaiRafale=this->delaiRafale+0.1;
-        std::ostringstream ss;
-        ss << delaiRafale;
-        this->view->showDelayChoose(ss.str().c_str());
+        if(moreOrLess==0 && this->tempo>0) this->tempo--;
+        else if(moreOrLess==1) this->tempo++;
+        std::string out_string;
+        std::stringstream ss;
+        ss << this->tempo;
+        out_string = ss.str();
+        this->view->showDelayChoose(out_string.c_str());
 }
 
 void ControllerMotion::changeCanalNumber(int moreOrLess){
@@ -115,7 +152,7 @@ void ControllerMotion::changeCanalNumber(int moreOrLess){
             this->channelPointer++;
         }
     }
-    this->game->setGameChannel(*(this->channelList.at(this->channelPointer)));    
+    this->game->setGameChannel(*(this->channelList.at(this->channelPointer)));
     this->view->showChannelChoose(this->game->getGameChannel()->getChannelNumber().c_str());
 }
 
@@ -244,6 +281,9 @@ void ControllerMotion::startGame(int type){
 bool ControllerMotion::connectUser(const char* id){
     cout<<"dans connect user";
     UserInfo * user = this->database->findUserById(id);
+    cout<< "tag numero "<<user->getUser()->getRFIDTagNumber()<<endl;
+    time_t theTime = time(NULL);
+    struct tm *aTime = localtime(&theTime);
     if(user != NULL){
         if(user->getUser()->getUserFirstName().length() > 12){
             user->getUser()->setUserFirstName(user->getUser()->getUserFirstName().substr(0,10));
@@ -263,6 +303,8 @@ bool ControllerMotion::connectUser(const char* id){
             else if(lockAccount == 0 && user->getUserAuthentification()->getUserType() == "EVENT"){
                 this->view->showMessage("Les comptes évènements ne sont\n pas autorisés pour le moment");                
                 return false;
+            }   else if(aTime->tm_year + 1900>user->getUser()->getUserLicenceYear())    {
+                this->view->showMessage("Licence expirée");
             }
             else{
                 this->game->getGameUsers()->push_back(user);
@@ -275,6 +317,8 @@ bool ControllerMotion::connectUser(const char* id){
             if(lockAccount == 1){
                 this->view->showMessage("L'accès aux comptes personnels\n est limité pour le moment");                
                 return false;
+            }   else if(aTime->tm_year + 1900>user->getUser()->getUserLicenceYear())    {
+                this->view->showMessage("Licence expirée");
             }
             else{
                 int cpt = 0;
@@ -315,6 +359,15 @@ void ControllerMotion::changeScore(int moreOrLess){
 }
 
 void ControllerMotion::changePlayer(){
+    /*std::vector<UserInfo*> tempo;
+    for(unsigned int i=0;i<this->game->getGameUsers()->size();i++)  {
+        if(this->game->getGameUsers()->at(i)->getNbPlateau()>0) {
+            tempo.push_back(this->game->getGameUsers()->at(i));
+        }
+    }
+    this->game->setGameUsers(tempo);*/
+    
+
     if(this->game->getGameAllPlat() < 1){
         this->view->setNoView(4);
         remove("save.txt");
@@ -375,11 +428,17 @@ void ControllerMotion::shoot(int keyval){
             }
             numCanal=atoi(this->game->getGameChannel()->getChannelNumber().c_str());
             cout << "Tir du lanceur " << numLanceur << " sur le canal " << numCanal << endl;
+            if(this->tempo>0) sleep(this->tempo);
             this->sendWave(numLanceur,numCanal);
+            cout<<"apres sendwave"<<endl;
             this->game->getGameCurrentUser()->decrPlateau(1);
+            cout<<"1"<<endl;
             this->game->decrPlat(1);
+            cout<<"2"<<endl;
             this->platSent++;
+            cout<<"3"<<endl;
             this->saveAllPlat();
+            cout<<"4"<<endl;
             this->saveGame();
             this->view->showGame(this->game);
         }
@@ -437,7 +496,6 @@ void ControllerMotion::sendWave(int numLanceur16, int numCanal16){
     int fd2 = open("/dev/ttyUSB0",O_WRONLY | O_NOCTTY | O_NDELAY);
     sleep(0.1);
     write(fd2, off, sizeof(off));
-    cout<<"Delai de "<<delaiRafale<<"secondes";
     close(fd2);
 }
 
@@ -452,7 +510,7 @@ void ControllerMotion::restartGame(){
 void ControllerMotion::saveGame(){
     std::ofstream ofs("save.txt");
     boost::archive::text_oarchive oa(ofs);
-    oa << this->game;
+    //oa << this->game;
 }
 
 void ControllerMotion::checkBackup(){
@@ -460,10 +518,6 @@ void ControllerMotion::checkBackup(){
         this->view->setNoView(6);
         this->redirectAfterMessage();
     }
-}
-
-float ControllerMotion::getDelaiRafale()    {
-    return this->delaiRafale;
 }
 
 void ControllerMotion::readBackup(int keyValue){   
@@ -503,7 +557,7 @@ void ControllerMotion::confirmPwd(int choice){
         if(this->game->getParameterFromCode("codeAdmin")->getParameterValue() == this->pwd){
             if(choice == 1)
                 this->resetAll();
-            else{
+            else    {
                 this->view->setNoView(8);
                 this->redirectAfterMessage();
             }

@@ -10,6 +10,8 @@ static gboolean is_a_pressed = false;
 static gboolean is_b_pressed = false;
 static gboolean is_c_pressed = false;
 static gboolean is_d_pressed = false;
+static gboolean isOption=false;
+static int nbOptions=4;
 std::string tagnumber;
 int currentView;
 int choice;
@@ -18,6 +20,7 @@ ViewMotion::ViewMotion(): Gtk::Window(Gtk::WINDOW_TOPLEVEL)
 {
     tagnumber="";
     this->viewNo = 1;
+    this->optionNo=1;
     this->isMessage = 0;
     this->isInitializaton = 1;
     MainWindow = this;
@@ -55,6 +58,10 @@ ViewMotion::~ViewMotion(){
 
 int ViewMotion::getNoView() const{
     return this->viewNo;
+}
+
+int ViewMotion::getNoOption() const{
+    return this->optionNo;
 }
 
 void ViewMotion::setNoView(int no){
@@ -120,10 +127,16 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                     case 34:
                     case 65453:
                         cout << "vue1";
-                        if(this->controller->checkUsers())  {
-                            this->controller->initializeCanalView();            
-                            this->setNoView(2);
+                        if(isOption)    {
+                            this->viewNo=3;
                             this->controller->redirectAfterMessage();
+                        }
+                        else    {
+                            if(this->controller->checkUsers())  {
+                                this->controller->initializeCanalView();            
+                                this->setNoView(2);
+                                this->controller->redirectAfterMessage();
+                            }
                         }
                         break;
                 }
@@ -143,7 +156,8 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                     case 65453:
                         cout << "vue2";
                         this->viewNo = 3;
-                        this->controller->startGame(1);
+                        if(!isOption) this->controller->startGame(1);
+                        else this->controller->redirectAfterMessage();
                         break;
                 }
                 break;
@@ -154,12 +168,17 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         this->controller->changeScore(0);
                         break;
                     case 65450:
-                    cout <<"test";
+                        cout <<"test";
                         this->controller->changeScore(1);                    
                         break;
                     case 65453:
                         cout << "vue3";
                         this->controller->changePlayer();
+                        break;
+                    case 65451:
+                        isOption=true;
+                        this->viewNo=10;
+                        this->controller->redirectAfterMessage();
                         break;
                     /*default:
                         this->controller->shoot(event->keyval);
@@ -248,26 +267,65 @@ bool ViewMotion::on_key_release_event(GdkEventKey* event){
                         this->controller->changeDelay(1);
                         break;
                     case 65453:
+                        isOption=false;
                         this->viewNo=3;
                         this->controller->redirectAfterMessage();              
                         break;
                 }
                 break;
-            /*case 10:
+            case 10:
                 switch(event->keyval){
                     case 65455:
-                        this->controller->changeNbCredits(0);
+                        if(this->optionNo==1)this->optionNo=nbOptions;
+                        else this->optionNo--;
+                        this->controller->redirectAfterMessage();
                         break;
                     case 65450:
-                        this->controller->changeNbCredits(1);
+                        if(this->optionNo==nbOptions)this->optionNo=1;
+                        else this->optionNo++;
+                        this->controller->redirectAfterMessage();             
                         break;
                     case 65453:
-                        this->viewNo=1;
-                        this->controller->addUser();
-                        //this->controller->redirectAfterMessage();              
+                        switch(this->optionNo)  {
+                            case 1:
+                                this->viewNo=2;
+                                this->controller->redirectAfterMessage();
+                                break;
+                            case 2:
+                                this->viewNo=1;
+                                this->controller->redirectAfterMessage();
+                                break;
+                            case 3:
+                                this->viewNo=9;
+                                this->controller->redirectAfterMessage();
+                                break;
+                            case 4:
+                                this->viewNo=11;
+                                this->controller->redirectAfterMessage();
+                                break;
+                        }
+                        break;
+                    case 65451:
+                        isOption=false;
+                        this->viewNo=3;
+                        this->controller->redirectAfterMessage();
+                }
+                break;
+            case 11:
+                switch(event->keyval){
+                    case 65455:
+                        this->controller->changePlatCountType();
+                        break;
+                    case 65450:
+                        this->controller->changePlatCountType();
+                        break;
+                    case 65453:
+                        isOption=false;
+                        this->viewNo=3;
+                        this->controller->redirectAfterMessage();             
                         break;
                 }
-                break;*/
+                break;
         }
     }
     return true;
@@ -357,6 +415,77 @@ bool ViewMotion::on_key_press (GdkEventKey *e)
   /* let the event propagate further */
   return GDK_EVENT_PROPAGATE;
 }
+
+void ViewMotion::showOption(const char* optionTitle){
+    MainWindow->remove();        
+    resetGrid();
+    label1.set_label("Options");
+    label2.set_label(optionTitle);
+    label7.set_label("<");
+    label8.set_label(">");
+    label9.set_label("o");
+
+    label1.set_name("canallabel1");
+    label2.set_name("canallabel2");
+    label7.set_name("canallabel7");
+    label8.set_name("canallabel8");
+    label9.set_name("canallabel9");
+    
+    grid.insert_column(0);
+    grid.insert_column(0);
+    grid.insert_column(0);
+
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+
+    grid.attach(label1, 0, 0, 3, 1);
+    grid.attach(label2, 0, 1, 3, 4);
+    grid.attach(label7, 0, 5, 1, 1);
+    grid.attach(label8, 1, 5, 1, 1);
+    grid.attach(label9, 2, 5, 1, 1);
+
+    MainWindow->add(grid); 
+    MainWindow->show_all(); 
+}
+
+void ViewMotion::showPlatCountTypeChoose(const char* platType){
+    MainWindow->remove();        
+    resetGrid();
+    label1.set_label("Type de compteur");
+    label2.set_label(platType);
+    label7.set_label("<");
+    label8.set_label(">");
+    label9.set_label("Valider");
+
+    label1.set_name("canallabel1");
+    label2.set_name("canallabel2");
+    label7.set_name("canallabel7");
+    label8.set_name("canallabel8");
+    label9.set_name("canallabel9");
+    
+    grid.insert_column(0);
+    grid.insert_column(0);
+    grid.insert_column(0);
+
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+    grid.insert_row(0);
+
+    grid.attach(label1, 0, 0, 3, 1);
+    grid.attach(label2, 0, 1, 3, 4);
+    grid.attach(label7, 0, 5, 1, 1);
+    grid.attach(label8, 1, 5, 1, 1);
+    grid.attach(label9, 2, 5, 1, 1);
+
+    MainWindow->add(grid); 
+    MainWindow->show_all(); 
+}
+
 
 void ViewMotion::showScan()   {
     MainWindow->remove();        
@@ -452,11 +581,11 @@ void ViewMotion::showGame(Game * game){
 
     label5Content+=to_string(game->getGameCurrentUser()->getScore());
     cout << "Type :"<<this->controller->getPlatType()<<endl;
-    if(this->controller->getPlatType()){
-        label6Content+=to_string(game->getGameAllPlat());        
+    if(this->controller->getPlatType()==0){
+        label6Content+=to_string(game->getGameCurrentUser()->getNbPlateau());
     }
     else{
-        label6Content+=to_string(game->getGameCurrentUser()->getNbPlateau());
+        label6Content+=to_string(game->getGameAllPlat());
     }
 
     label1.set_label(label1Content);
@@ -577,11 +706,11 @@ void ViewMotion::showNbCreditsChoose(const char* nbCredits){
     MainWindow->show_all();    
 }
 
-void ViewMotion::showDelayChoose(const char* delay){
+void ViewMotion::showDelayChoose(const char* tempo){
     MainWindow->remove();        
     resetGrid();
-    label1.set_label("Délai entre tirs en rafale");
-    label2.set_label(delay);
+    label1.set_label("Temporisation");
+    label2.set_label(tempo);
     label7.set_label("-");
     label8.set_label("+");
     label9.set_label("Valider");
@@ -654,7 +783,8 @@ void ViewMotion::showPlayerList(std::vector<UserInfo*>* userList){
     label3.set_label(right);
     label7.set_label("Ajouter");
     label8.set_label("Supprimer");
-    label9.set_label("Commencer");
+    if(isOption) label9.set_label("Reprendre");
+    else label9.set_label("Commencer");
 
     label1.set_name("listelabel1");
     label2.set_name("listelabel2");
