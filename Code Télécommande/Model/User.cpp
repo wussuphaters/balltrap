@@ -5,7 +5,7 @@ using namespace std;
 /**
 *   Constructeurs
 */
-User::User(int userId,int userRFIDTagNumbe,string userFirstName, string userLastName, string userMail, string userAddress, string userAddressSupplement,
+User::User(int userId,int userRFIDTagNumber,string userFirstName, string userLastName, string userMail, string userAddress, string userAddressSupplement,
 string userZipCode, string userCity, string userBirthdate, string userLicenceNumber, string userFixPhone, string userMobilePhone,
 string userCommentary, int userLicenceYear, int categoryId, int userGenre)
 {

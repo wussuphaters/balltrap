@@ -161,7 +161,7 @@ using namespace std;
         s << "-----FinListe-----" << endl;
         s << "gameCurrentUser : " << *c.getGameCurrentUser() << endl <<
         "----------------------------------------------------------------------" << endl;
-
+        
         return s;
     }
 

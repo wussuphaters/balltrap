@@ -265,6 +265,7 @@ Json::Value Database::getJsonFromApi(const char* url){
               curl_easy_strerror(this->resCurl));
 
     Json::Reader reader;
+    cout << response.c_str() << endl;
     bool parsingSuccessful = reader.parse( response.c_str(), root );     //parse process
     if ( !parsingSuccessful )
     {

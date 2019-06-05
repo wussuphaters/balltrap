@@ -27,8 +27,7 @@ private:
     std::vector<Channel*> channelList;
     std::string pwd;
     unsigned int channelPointer;
-    int platType, nbPlatMax, paramDefaultNbPlat, platSent,nbCreditsCurrentPlayer;
-    float delaiRafale;
+    int platType, nbPlatMax, paramDefaultNbPlat, platSent,nbCreditsCurrentPlayer,tempo,multipleCards;
     bool isParamRefreshed;
     bool isSave;
 
@@ -40,8 +39,8 @@ public:
     //accesseurs
     void setViewMotion(ViewMotion*);
     int getPlatType();
-    float getDelaiRafale();
     std::string getPlatSent();
+    int getDelaiRafale();
 
 
     /*Hérité de Controller*/
@@ -62,6 +61,8 @@ public:
 
     //Permet de choisir manuellement le nombre de credits que l'on souhaite utiliser pendant la partie
     void changeNbCredits(int);
+
+    void changePlatCountType();
     
     /* 
     *  Permet d'ajouter un tireur à la liste

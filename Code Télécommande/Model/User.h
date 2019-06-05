@@ -20,7 +20,7 @@ class User
     //Fonction qui va permettre la sérialization de l'objet et la sauvegarde
     //de celui-ci dans un fichier externe
     void serialize(Archive & ar, const unsigned int version){
-        ar & userId & userLicenceYear & categoryId & userGenre
+        ar & userId & userRFIDTagNumber & userLicenceYear & categoryId & userGenre
         & userFirstName & userLastName & userMail & userAddress
         & userAddressSupplement & userZipCode & userCity & userBirthdate
         & userLicenceNumber & userFixPhone & userMobilePhone & userCommentary;
